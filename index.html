@@ -165,15 +165,9 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
       <label>Twitch-канал</label>
       <input type="text" id="s-channel" placeholder="имя_канала" autocomplete="off" spellcheck="false">
     </div>
-    <div class="row">
-      <div class="field">
-        <label>Авто-рестарт после победы (сек)</label>
-        <input type="number" id="s-restart" value="20" min="0" max="120">
-      </div>
-      <div class="field">
-        <label>Слов в доске</label>
-        <input type="number" id="s-board" value="12" min="5" max="30">
-      </div>
+    <div class="field">
+      <label>Авто-рестарт после победы (сек)</label>
+      <input type="number" id="s-restart" value="20" min="0" max="120">
     </div>
     <label class="toggle"><input type="checkbox" id="s-sound" checked> Звук при победе и приближении</label>
     <div class="field">
@@ -182,7 +176,7 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
     </div>
     <button class="btn btn-main" id="btn-start">Запустить игру</button>
   </div>
-  <p class="hint">Зрители пишут любые слова в чат. Бот оценивает близость к секретному слову через семантический API. Команда <b>!подсказка</b> открывает слово поближе (по голосам чата).<br>После запуска получишь ссылку-оверлей для OBS.</p>
+  <p class="hint">Зрители пишут любые слова в чат. Бот оценивает близость к секретному слову через семантический API.<br>После запуска получишь ссылку-оверлей для OBS.</p>
 </div>
 
 <!-- ── GAME (control panel) ── -->
@@ -194,7 +188,6 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
     <div class="g-spacer"></div>
     <button class="gbtn" id="btn-theme" title="Сменить тему"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99a1.5 1.5 0 0 1 1.5-1.5H16a5 5 0 0 0 5-5c0-4.42-4.03-8-9-8zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>Тема</button>
     <button class="gbtn accent" id="btn-obs"><svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>OBS-ссылка</button>
-    <button class="gbtn" id="btn-hint"><svg viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>Подсказка</button>
     <button class="gbtn" id="btn-new"><svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>Новое слово</button>
     <button class="gbtn danger" id="btn-reset"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>Сброс</button>
   </div>
@@ -336,7 +329,7 @@ async function startGame(){
   if(!ch)return;
   channel=ch;
   restartSec=Math.max(0,parseInt($('s-restart').value)||20);
-  boardSize=Math.max(5,parseInt($('s-board').value)||12);
+  boardSize=12;
   soundOn=$('s-sound').checked;
   saveSettings();
   $('g-channel').textContent=ch;
@@ -371,7 +364,6 @@ function handleGuess(name,raw){
   let word=normalize(raw);
   if(!word||word.length>40)return;
   // команды
-  if(word==='!подсказка'||word==='подсказка'){voteHint(name);return;}
   if(word.startsWith('!'))return;
   // лента
   pushFeed(name,word,null);
@@ -548,7 +540,7 @@ function parseMsg(line){
 function normalize(s){ return s.toLowerCase().trim().replace(/ё/g,'е').replace(/[^a-zа-я0-9!\- ]/g,'').replace(/\s+/g,' ').split(' ')[0]; }
 function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
 function saveSettings(){ try{localStorage.setItem('slovo:set',JSON.stringify({restartSec,boardSize,soundOn}));}catch(e){} }
-function loadSettings(){ try{const s=JSON.parse(localStorage.getItem('slovo:set')||'{}'); if(s.restartSec!=null)$('s-restart').value=s.restartSec; if(s.boardSize!=null)$('s-board').value=s.boardSize; if(s.soundOn!=null)$('s-sound').checked=s.soundOn;}catch(e){} }
+function loadSettings(){ try{const s=JSON.parse(localStorage.getItem('slovo:set')||'{}'); if(s.restartSec!=null)$('s-restart').value=s.restartSec; if(s.soundOn!=null)$('s-sound').checked=s.soundOn;}catch(e){} }
 
 /* ════════ SFX ════════ */
 const SFX=(function(){
@@ -586,7 +578,6 @@ if(!OBS_MODE){
   $('btn-start').onclick=startGame;
   $('s-channel').addEventListener('keydown',e=>{if(e.key==='Enter')startGame();});
   $('btn-new').onclick=()=>newRound();
-  $('btn-hint').onclick=()=>doHint();
   $('btn-reset').onclick=()=>{ if(confirm('Сбросить игру и вернуться в меню?')){ if(ws)ws.close(); channel=''; location.reload(); } };
   $('btn-obs').onclick=()=>{
     const link=obsLink();
