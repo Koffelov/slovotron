@@ -9,6 +9,11 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0e14;--card:#111722;--card2:#0d131c;--line:#1d2735;--cyan:#22d3ee;--mag:#e879f9;--txt:#e8eef5;--dim:#7a8aa0}
+body[data-theme="matrix"]{--bg:#050a05;--card:#0a140a;--card2:#071007;--line:#143a14;--cyan:#22c55e;--mag:#86efac;--txt:#d7ffd7;--dim:#4a7a4a}
+body[data-theme="sunset"]{--bg:#1a0e14;--card:#241420;--card2:#1c0f18;--line:#3a2030;--cyan:#fb923c;--mag:#f472b6;--txt:#fbe8ef;--dim:#9a7a88}
+body[data-theme="ice"]{--bg:#07111c;--card:#0e1c2e;--card2:#0a1626;--line:#1d3550;--cyan:#38bdf8;--mag:#a5f3fc;--txt:#e6f4ff;--dim:#6a8aa8}
+body[data-theme="dracula"]{--bg:#15111c;--card:#1e1830;--card2:#170f24;--line:#322748;--cyan:#bd93f9;--mag:#ff5577;--txt:#f0e6ff;--dim:#7a6a9a}
+body[data-theme="amber"]{--bg:#0e0b06;--card:#1a1408;--card2:#140f06;--line:#3a2c12;--cyan:#fbbf24;--mag:#f87171;--txt:#fff3d6;--dim:#9a8a5a}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
 
 /* screens */
@@ -29,6 +34,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .row{display:flex;gap:10px}.row .field{flex:1}
 .toggle{display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;color:#c7d2e0;font-size:.88rem}
 .toggle input{width:18px;height:18px;accent-color:var(--cyan);flex:none;cursor:pointer}
+.themes{display:flex;gap:9px;flex-wrap:wrap}
+.sw{width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid var(--line);position:relative;transition:transform .12s}
+.sw:hover{transform:scale(1.12)}
+.sw.on{border-color:#fff;box-shadow:0 0 0 2px var(--cyan)}
 .btn{padding:13px 28px;border:none;border-radius:13px;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer;transition:all .18s}
 .btn-main{background:linear-gradient(135deg,var(--cyan),var(--mag));color:#06121a;width:100%;margin-top:8px}
 .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(34,211,238,.35)}
@@ -167,6 +176,10 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
       </div>
     </div>
     <label class="toggle"><input type="checkbox" id="s-sound" checked> Звук при победе и приближении</label>
+    <div class="field">
+      <label>Тема оформления</label>
+      <div class="themes" id="themes"></div>
+    </div>
     <button class="btn btn-main" id="btn-start">Запустить игру</button>
   </div>
   <p class="hint">Зрители пишут любые слова в чат. Бот оценивает близость к секретному слову через семантический API. Команда <b>!подсказка</b> открывает слово поближе (по голосам чата).<br>После запуска получишь ссылку-оверлей для OBS.</p>
@@ -184,6 +197,7 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
       <button class="sw-eye" id="sw-eye" title="Показать/скрыть"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button>
     </div>
     <div class="g-spacer"></div>
+    <button class="gbtn" id="btn-theme" title="Сменить тему"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99a1.5 1.5 0 0 1 1.5-1.5H16a5 5 0 0 0 5-5c0-4.42-4.03-8-9-8zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>Тема</button>
     <button class="gbtn accent" id="btn-obs"><svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>OBS-ссылка</button>
     <button class="gbtn" id="btn-hint"><svg viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>Подсказка</button>
     <button class="gbtn" id="btn-new"><svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>Новое слово</button>
@@ -242,6 +256,37 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
 const $=id=>document.getElementById(id);
 const params=new URLSearchParams(location.search);
 const OBS_MODE=params.get('obs')==='1'||location.hash==='#obs';
+
+/* ════════ THEMES ════════ */
+const THEMES=[
+  {key:'neon',name:'Неон',c1:'#22d3ee',c2:'#e879f9'},
+  {key:'matrix',name:'Матрица',c1:'#22c55e',c2:'#86efac'},
+  {key:'sunset',name:'Закат',c1:'#fb923c',c2:'#f472b6'},
+  {key:'ice',name:'Лёд',c1:'#38bdf8',c2:'#a5f3fc'},
+  {key:'dracula',name:'Дракула',c1:'#bd93f9',c2:'#ff5577'},
+  {key:'amber',name:'Янтарь',c1:'#fbbf24',c2:'#f87171'},
+];
+let curTheme=(params.get('theme')||localStorage.getItem('slovo:theme')||'neon');
+if(!THEMES.find(t=>t.key===curTheme))curTheme='neon';
+function applyTheme(key){
+  curTheme=key;
+  document.body.setAttribute('data-theme',key);
+  try{localStorage.setItem('slovo:theme',key);}catch(e){}
+  document.querySelectorAll('#themes .sw').forEach(s=>s.classList.toggle('on',s.dataset.k===key));
+}
+applyTheme(curTheme);
+function buildThemes(){
+  const el=document.getElementById('themes'); if(!el)return;
+  el.innerHTML='';
+  THEMES.forEach(t=>{
+    const s=document.createElement('div');
+    s.className='sw'+(t.key===curTheme?' on':'');
+    s.dataset.k=t.key; s.title=t.name;
+    s.style.background='linear-gradient(135deg,'+t.c1+','+t.c2+')';
+    s.onclick=()=>applyTheme(t.key);
+    el.appendChild(s);
+  });
+}
 
 let channel='',restartSec=20,boardSize=12,soundOn=true;
 let challengeId='',secretWord='',gameActive=false,finished=false;
@@ -536,12 +581,14 @@ function confettiBurst(){
 }
 
 /* ════════ OBS-LINK / CONTROLS ════════ */
-function obsLink(){ return location.origin+location.pathname+'?obs=1&channel='+encodeURIComponent(channel); }
+function obsLink(){ return location.origin+location.pathname+'?obs=1&channel='+encodeURIComponent(channel)+'&theme='+curTheme; }
 
 if(!OBS_MODE){
   // подключаем общий KDRSH-логин/поддержку только в обычном режиме
   const e=document.createElement('script'); e.src='https://quizkdrsh.vercel.app/embed.js?site=%D0%A1%D0%BB%D0%BE%D0%B2%D0%BE%D1%82%D1%80%D0%BE%D0%BD'; document.body.appendChild(e);
   loadSettings();
+  buildThemes();
+  $('btn-theme').onclick=()=>{ const i=THEMES.findIndex(t=>t.key===curTheme); applyTheme(THEMES[(i+1)%THEMES.length].key); };
   $('btn-start').onclick=startGame;
   $('s-channel').addEventListener('keydown',e=>{if(e.key==='Enter')startGame();});
   $('sw-eye').onclick=()=>$('secret').classList.toggle('blur');
