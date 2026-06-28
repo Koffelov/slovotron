@@ -198,13 +198,9 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
       </div>
     </div>
     <div class="col col-side">
-      <div class="panel" style="flex:1.1">
-        <h3>Лента догадок <span id="feed-cnt" style="color:var(--cyan)">0</span></h3>
-        <div class="feed" id="feed"></div>
-      </div>
-      <div class="panel">
+      <div class="panel" style="flex:1">
         <h3>Победители</h3>
-        <div class="lb" id="lb" style="max-height:150px"></div>
+        <div class="lb" id="lb"></div>
       </div>
       <div class="panel">
         <h3>Раунд</h3>
@@ -433,7 +429,6 @@ function win(name,word){
 function renderAll(){ OBS_MODE?renderOBS():renderMain(); }
 function renderMain(){
   $('g-words').textContent=wordsCount;
-  $('feed-cnt').textContent=feed.length;
   $('st-uniq').textContent=closest.length;
   $('st-users').textContent=uniqUsers.size;
   $('st-best').textContent=bestDist===Infinity?'—':bestDist;
@@ -450,14 +445,6 @@ function renderMain(){
         +'<div class="gr-dist" style="color:'+col+'">'+c.distance+'</div></div>';
     }).join('');
   }
-  // feed
-  $('feed').innerHTML=feed.slice(-40).map(f=>{
-    const col=f.d!=null?heatColor(f.d):'var(--dim)';
-    return '<div class="feed-row"><span class="fn" style="color:'+(f.color||'#22d3ee')+'">'+esc(f.name)+'</span> '
-      +'<span class="fw">'+esc(f.word)+'</span> '
-      +(f.d!=null?'<span class="fd" style="color:'+col+'">· '+f.d+'</span>':'<span class="fd">· …</span>')+'</div>';
-  }).join('');
-  $('feed').scrollTop=$('feed').scrollHeight;
   renderLB();
 }
 function renderLB(){
