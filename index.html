@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322d3ee'><path d='M12 2a7 7 0 0 0-7 7c0 3 2 5 3 7h8c1-2 3-4 3-7a7 7 0 0 0-7-7zm-3 18h6v1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-1z'/></svg>">
+<title>Словотрон · KDRSH</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e14;--card:#111722;--card2:#0d131c;--line:#1d2735;--cyan:#22d3ee;--mag:#e879f9;--txt:#e8eef5;--dim:#7a8aa0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* screens */
+.screen{display:none}
+.screen.active{display:flex}
+
+/* ── SETUP ── */
+#screen-setup{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.logo-row svg{width:54px;height:54px;filter:drop-shadow(0 0 16px rgba(34,211,238,.5))}
+.title{font-size:2.8rem;font-weight:900;letter-spacing:2px;background:linear-gradient(135deg,var(--cyan),var(--mag));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{color:var(--dim);font-size:.95rem;margin-bottom:26px;max-width:440px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;width:100%;max-width:480px;text-align:left}
+.field{margin-bottom:14px}
+.field label{display:block;color:var(--dim);font-size:.72rem;margin-bottom:6px;text-transform:uppercase;letter-spacing:.6px;font-weight:700}
+.field input{width:100%;padding:12px 15px;border:2px solid var(--line);border-radius:11px;background:var(--card2);color:var(--txt);font-size:.95rem;font-family:inherit;outline:none}
+.field input:focus{border-color:var(--cyan)}
+.row{display:flex;gap:10px}.row .field{flex:1}
+.toggle{display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;color:#c7d2e0;font-size:.88rem}
+.toggle input{width:18px;height:18px;accent-color:var(--cyan);flex:none;cursor:pointer}
+.btn{padding:13px 28px;border:none;border-radius:13px;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer;transition:all .18s}
+.btn-main{background:linear-gradient(135deg,var(--cyan),var(--mag));color:#06121a;width:100%;margin-top:8px}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(34,211,238,.35)}
+.hint{color:var(--dim);font-size:.78rem;margin-top:16px;line-height:1.6;max-width:460px;text-align:center}
+
+/* ── GAME ── */
+#screen-game{min-height:100vh;flex-direction:column;padding:12px;gap:10px;height:100vh;max-height:100vh;overflow:hidden}
+.g-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.g-logo{font-size:1.15rem;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,var(--cyan),var(--mag));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:flex;align-items:center;gap:7px}
+.g-logo svg{width:22px;height:22px}
+.chip{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:7px 13px;font-weight:700;font-size:.85rem}
+.chip b{color:var(--cyan)}
+.g-spacer{flex:1}
+.gbtn{background:var(--card);border:1px solid var(--line);color:#c7d2e0;border-radius:10px;padding:8px 13px;font-size:.8rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.gbtn:hover{border-color:var(--cyan);color:#fff}
+.gbtn svg{width:15px;height:15px;fill:currentColor}
+.gbtn.danger:hover{border-color:#ef4444;color:#ef4444}
+.gbtn.accent{background:linear-gradient(135deg,rgba(34,211,238,.18),rgba(232,121,249,.18));border-color:rgba(34,211,238,.4);color:var(--cyan)}
+
+.g-main{display:flex;gap:10px;flex:1;min-height:0;align-items:stretch}
+.col{display:flex;flex-direction:column;gap:10px;min-height:0}
+.col-board{flex:1.6}.col-side{width:330px;flex-shrink:0}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel h3{font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+
+/* closest board */
+.board{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:0}
+.guess-row{display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:10px;padding:8px 12px;position:relative;overflow:hidden}
+.gr-bar{position:absolute;left:0;top:0;bottom:0;opacity:.18;border-radius:10px;transition:width .4s}
+.gr-rank{position:relative;width:26px;font-weight:900;color:var(--dim);font-size:.8rem;flex:none;text-align:center}
+.gr-word{position:relative;flex:1;font-weight:800;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gr-by{position:relative;font-size:.7rem;color:var(--dim);flex:none;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gr-dist{position:relative;font-weight:900;font-size:.9rem;flex:none;min-width:54px;text-align:right}
+.guess-row.win{animation:winpop .5s ease}
+@keyframes winpop{0%{transform:scale(.8)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+
+.board-empty{color:var(--dim);text-align:center;padding:30px 10px;font-size:.9rem}
+
+/* feed */
+.feed{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;min-height:0;font-size:.82rem}
+.feed-row{padding:3px 6px;border-radius:6px;background:rgba(255,255,255,.02);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feed-row .fn{font-weight:700}
+.feed-row .fw{font-weight:700}
+.feed-row .fd{color:var(--dim);font-size:.75rem}
+
+/* leaderboard */
+.lb{display:flex;flex-direction:column;gap:5px;overflow-y:auto;min-height:0;flex:1}
+.lb-row{display:flex;align-items:center;gap:9px;font-size:.86rem;padding:5px 9px;border-radius:8px;background:var(--card2)}
+.lb-rank{width:18px;text-align:center;font-weight:900;color:var(--dim);flex:none}
+.lb-row:nth-child(1) .lb-rank{color:#ffd24a}.lb-row:nth-child(2) .lb-rank{color:#cdd6e0}.lb-row:nth-child(3) .lb-rank{color:#d98a4a}
+.lb-name{flex:1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-pts{color:var(--cyan);font-weight:900}
+
+/* stats */
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{flex:1;min-width:64px;background:var(--card2);border-radius:10px;padding:9px;text-align:center}
+.stat-n{font-size:1.3rem;font-weight:900;color:var(--cyan)}
+.stat-l{font-size:.62rem;color:var(--dim);text-transform:uppercase;margin-top:1px;letter-spacing:.4px}
+
+/* secret box (streamer only) */
+.secret{display:flex;align-items:center;gap:10px}
+.secret .sw-warn{font-size:.6rem;color:var(--mag);text-transform:uppercase;letter-spacing:.4px;font-weight:800;line-height:1.2;max-width:80px}
+.secret .sw{font-size:1.2rem;font-weight:900;letter-spacing:1px;flex:1;transition:filter .2s}
+.secret.blur .sw{filter:blur(8px)}
+.sw-eye{background:rgba(255,255,255,.06);border:none;color:#fff;width:30px;height:30px;border-radius:7px;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center}
+.sw-eye svg{width:16px;height:16px;fill:currentColor}
+
+/* win overlay */
+.win-ov{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;background:rgba(10,14,20,.86);backdrop-filter:blur(6px);padding:20px}
+.win-ov.show{display:flex;animation:fade .3s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.win-label{font-size:1.1rem;letter-spacing:3px;text-transform:uppercase;color:var(--mag);font-weight:800;margin-bottom:8px}
+.win-word{font-size:clamp(3rem,10vw,7rem);font-weight:900;line-height:1;background:linear-gradient(135deg,var(--cyan),var(--mag));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
+.win-who{font-size:1.4rem;font-weight:800}.win-who b{color:var(--cyan)}
+.win-sub{color:var(--dim);margin-top:18px;font-size:.95rem}
+#confetti{position:fixed;inset:0;z-index:199;pointer-events:none;display:none}
+#confetti.show{display:block}
+
+.tg-w{position:fixed;top:10px;right:10px;z-index:60;display:flex;align-items:center;gap:6px;padding:7px 12px;background:rgba(17,23,34,.85);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--txt);font-size:.78rem;font-weight:600}
+.tg-w:hover{border-color:#2AABEE}
+.watermark{position:fixed;bottom:8px;right:12px;font-size:.95rem;color:rgba(255,255,255,.05);font-weight:900;pointer-events:none}
+
+@media(max-width:860px){.g-main{flex-direction:column}.col-side{width:100%}}
+
+/* ───────── OBS OVERLAY MODE ───────── */
+body.obs{background:transparent!important}
+body.obs .screen,body.obs .tg-w,body.obs .watermark{display:none!important}
+#obs-root{display:none}
+body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',system-ui,sans-serif;transition:opacity .8s}
+.obs-panel{position:absolute;left:18px;bottom:18px;width:360px;background:rgba(10,14,20,.72);border:1px solid rgba(34,211,238,.25);border-radius:16px;padding:14px 14px 10px;backdrop-filter:blur(8px);box-shadow:0 10px 40px rgba(0,0,0,.45)}
+.obs-head{display:flex;align-items:center;gap:8px;font-weight:900;letter-spacing:1px;font-size:.95rem;margin-bottom:10px;color:#fff}
+.obs-head svg{width:18px;height:18px;fill:var(--cyan)}
+.obs-head .obs-cnt{margin-left:auto;font-size:.7rem;color:var(--dim);font-weight:700}
+.obs-list{display:flex;flex-direction:column;gap:5px}
+.obs-row{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.04);border-radius:9px;padding:6px 11px;position:relative;overflow:hidden}
+.obs-bar{position:absolute;left:0;top:0;bottom:0;opacity:.2;border-radius:9px}
+.obs-rank{position:relative;width:20px;text-align:center;font-weight:900;color:var(--dim);font-size:.78rem;flex:none}
+.obs-word{position:relative;flex:1;font-weight:800;color:#fff;font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.obs-dist{position:relative;font-weight:900;font-size:.85rem;flex:none}
+.obs-foot{margin-top:8px;font-size:.72rem;color:var(--dim);text-align:center}
+.obs-foot b{color:var(--cyan)}
+.obs-win{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.obs-win.show{display:flex}
+.obs-win .ow-l{font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:var(--mag);font-weight:800;text-shadow:0 2px 12px #000}
+.obs-win .ow-w{font-size:clamp(3rem,9vw,6rem);font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--mag));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:0 4px 30px rgba(34,211,238,.4)}
+.obs-win .ow-who{font-size:1.5rem;font-weight:800;color:#fff;text-shadow:0 2px 12px #000}
+.obs-win .ow-who b{color:var(--cyan)}
+</style>
+</head>
+<body>
+<a class="tg-w" href="https://t.me/mypodvalq" target="_blank" rel="noopener">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="#2AABEE"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.53 8.15l-1.8 8.47c-.13.6-.48.75-.98.47l-2.72-2-1.31 1.26c-.15.15-.27.27-.55.27l.2-2.77 5.02-4.54c.22-.2-.05-.3-.34-.12l-6.2 3.9-2.67-.83c-.58-.18-.59-.58.12-.86l10.44-4.02c.48-.18.91.12.75.86z"/></svg> Telegram
+</a>
+<div class="watermark">vibecoded by ishakkodolov_kdrsh</div>
+
+<!-- ── SETUP ── -->
+<div id="screen-setup" class="screen active">
+  <div class="logo-row">
+    <svg viewBox="0 0 24 24" fill="#22d3ee"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 3 7h8c1-2 3-4 3-7a7 7 0 0 0-7-7zm-3 18h6v1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-1z"/></svg>
+    <div class="title">СЛОВОТРОН</div>
+  </div>
+  <div class="sub">Чат угадывает секретное слово по смыслу. Чем ближе по значению — тем «горячее». Дистанция 1 = победа!</div>
+  <div class="card">
+    <div class="field">
+      <label>Twitch-канал</label>
+      <input type="text" id="s-channel" placeholder="имя_канала" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Авто-рестарт после победы (сек)</label>
+        <input type="number" id="s-restart" value="20" min="0" max="120">
+      </div>
+      <div class="field">
+        <label>Слов в доске</label>
+        <input type="number" id="s-board" value="12" min="5" max="30">
+      </div>
+    </div>
+    <label class="toggle"><input type="checkbox" id="s-sound" checked> Звук при победе и приближении</label>
+    <button class="btn btn-main" id="btn-start">Запустить игру</button>
+  </div>
+  <p class="hint">Зрители пишут любые слова в чат. Бот оценивает близость к секретному слову через семантический API. Команда <b>!подсказка</b> открывает слово поближе (по голосам чата).<br>После запуска получишь ссылку-оверлей для OBS.</p>
+</div>
+
+<!-- ── GAME (control panel) ── -->
+<div id="screen-game" class="screen">
+  <div class="g-top">
+    <div class="g-logo"><svg viewBox="0 0 24 24" fill="#22d3ee"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 3 7h8c1-2 3-4 3-7a7 7 0 0 0-7-7zm-3 18h6v1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-1z"/></svg> СЛОВОТРОН</div>
+    <div class="chip">Канал <b id="g-channel">—</b></div>
+    <div class="chip">Слов: <b id="g-words">0</b></div>
+    <div class="secret blur panel" id="secret" style="padding:7px 12px;flex-direction:row">
+      <div class="sw-warn">Секрет (только тебе)</div>
+      <div class="sw" id="secret-word">—</div>
+      <button class="sw-eye" id="sw-eye" title="Показать/скрыть"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button>
+    </div>
+    <div class="g-spacer"></div>
+    <button class="gbtn accent" id="btn-obs"><svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>OBS-ссылка</button>
+    <button class="gbtn" id="btn-hint"><svg viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>Подсказка</button>
+    <button class="gbtn" id="btn-new"><svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>Новое слово</button>
+    <button class="gbtn danger" id="btn-reset"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>Сброс</button>
+  </div>
+
+  <div class="g-main">
+    <div class="col col-board">
+      <div class="panel" style="flex:1">
+        <h3>🔥 Ближайшие слова <span id="board-status" style="color:var(--cyan)">сбор...</span></h3>
+        <div class="board" id="board"><div class="board-empty">Ждём догадки из чата…<br>зрители пишут слова, бот считает близость</div></div>
+      </div>
+    </div>
+    <div class="col col-side">
+      <div class="panel" style="flex:1.1">
+        <h3>Лента догадок <span id="feed-cnt" style="color:var(--cyan)">0</span></h3>
+        <div class="feed" id="feed"></div>
+      </div>
+      <div class="panel">
+        <h3>Победители</h3>
+        <div class="lb" id="lb" style="max-height:150px"></div>
+      </div>
+      <div class="panel">
+        <h3>Раунд</h3>
+        <div class="stats">
+          <div class="stat"><div class="stat-n" id="st-uniq">0</div><div class="stat-l">слов</div></div>
+          <div class="stat"><div class="stat-n" id="st-users">0</div><div class="stat-l">игроков</div></div>
+          <div class="stat"><div class="stat-n" id="st-best">—</div><div class="stat-l">лучшая</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WIN overlay (control panel) -->
+<div class="win-ov" id="win-ov">
+  <div class="win-label">Слово угадано</div>
+  <div class="win-word" id="win-word">—</div>
+  <div class="win-who" id="win-who"></div>
+  <div class="win-sub" id="win-sub"></div>
+</div>
+<canvas id="confetti"></canvas>
+
+<!-- ── OBS OVERLAY ── -->
+<div id="obs-root">
+  <div class="obs-panel">
+    <div class="obs-head"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 3 7h8c1-2 3-4 3-7a7 7 0 0 0-7-7z"/></svg> СЛОВОТРОН <span class="obs-cnt" id="obs-cnt"></span></div>
+    <div class="obs-list" id="obs-list"></div>
+    <div class="obs-foot" id="obs-foot">пиши слово в чат — угадай по смыслу</div>
+  </div>
+  <div class="obs-win" id="obs-win">
+    <div class="ow-l">Угадано!</div>
+    <div class="ow-w" id="ow-w">—</div>
+    <div class="ow-who" id="ow-who"></div>
+  </div>
+</div>
+
+<script>
+/* ════════ CONFIG / STATE ════════ */
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+const OBS_MODE=params.get('obs')==='1'||location.hash==='#obs';
+
+let channel='',restartSec=20,boardSize=12,soundOn=true;
+let challengeId='',secretWord='',gameActive=false,finished=false;
+let wordsCount=0, bestDist=Infinity;
+const scoredCache=new Map();   // word -> {distance,by}
+let closest=[];                // [{word,distance,by}]
+let feed=[];
+const uniqUsers=new Set();
+let ws=null, restartTimer=null;
+let leaderboard=JSON.parse(localStorage.getItem('slovo:lb')||'{}');
+/* hint voting */
+let hintVoters=new Set();
+
+/* ════════ CONTEXTNO API ════════ */
+const API='https://api.contextno.com/';
+async function ctx(method,p={}){
+  const url=new URL(method,API);
+  if(method==='score'){url.searchParams.set('challenge_id',p.id);url.searchParams.set('word',p.word);url.searchParams.set('challenge_type','random');}
+  if(method==='tip'){url.searchParams.set('challenge_id',p.id);url.searchParams.set('last_word_rank',p.rank);url.searchParams.set('challenge_type','random');}
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),10000);
+  try{
+    const r=await fetch(url,{signal:c.signal,headers:{'Accept':'application/json'}});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return await r.json();
+  }finally{clearTimeout(t);}
+}
+async function newChallenge(){
+  let tries=0;
+  while(tries<6){
+    tries++;
+    try{
+      const d=await ctx('random-challenge');
+      const id=d.id;
+      // антибаг-проверка
+      const chk=await ctx('score',{id,word:'банан'});
+      if(chk.distance===0||chk.error){continue;}
+      let secret='';
+      try{const s=await ctx('tip',{id,rank:1});secret=(s&&s.word)||'';}catch(e){}
+      return {id,secret};
+    }catch(e){await new Promise(r=>setTimeout(r,800));}
+  }
+  throw new Error('Не удалось получить слово');
+}
+
+/* ════════ DISTANCE → HEAT ════════ */
+function heatPct(d){ if(d<=1)return 100; return Math.max(2,Math.round(100*(1-Math.log(d)/Math.log(12000)))); }
+function heatColor(d){ const p=heatPct(d); const hue=Math.round((100-p)*2.1); return `hsl(${hue},85%,55%)`; } // close→red/hot, far→blue/cold
+
+/* ════════ GAME FLOW ════════ */
+async function startGame(){
+  const ch=$('s-channel').value.trim().toLowerCase().replace(/^#/,'');
+  if(!ch)return;
+  channel=ch;
+  restartSec=Math.max(0,parseInt($('s-restart').value)||20);
+  boardSize=Math.max(5,parseInt($('s-board').value)||12);
+  soundOn=$('s-sound').checked;
+  saveSettings();
+  $('g-channel').textContent=ch;
+  showScreen('screen-game');
+  connectChat(false);
+  await newRound();
+}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active')}
+
+async function newRound(){
+  clearTimeout(restartTimer);
+  finished=true; gameActive=false;
+  $('board-status').textContent='загрузка слова...';
+  closest=[];feed=[];scoredCache.clear();uniqUsers.clear();hintVoters.clear();
+  wordsCount=0;bestDist=Infinity;
+  renderAll();
+  try{
+    const {id,secret}=await newChallenge();
+    challengeId=id;secretWord=secret;
+    $('secret-word').textContent=secret?secret.toUpperCase():'???';
+    $('board-status').textContent='идёт игра';
+    gameActive=true;finished=false;
+    if(!OBS_MODE) say('🧠 Новое слово загадано! Пиши слова в чат — угадай по смыслу. !подсказка — открыть поближе');
+  }catch(e){
+    $('board-status').textContent='ошибка API';
+    if(!OBS_MODE) say('⚠️ Не удалось загрузить слово, жми «Новое слово»');
+  }
+}
+
+let scoreQueue=Promise.resolve();
+function handleGuess(name,raw){
+  if(!gameActive||finished)return;
+  let word=normalize(raw);
+  if(!word||word.length>40)return;
+  // команды
+  if(word==='!подсказка'||word==='подсказка'){voteHint(name);return;}
+  if(word.startsWith('!'))return;
+  // лента
+  pushFeed(name,word,null);
+  // дедуп: уже считали в этом раунде
+  if(scoredCache.has(word)){
+    const c=scoredCache.get(word);
+    bumpFeed(word,c.distance);
+    return;
+  }
+  scoredCache.set(word,{distance:null,by:name});
+  uniqUsers.add(name.toLowerCase());
+  // последовательная очередь чтобы не ддосить API
+  scoreQueue=scoreQueue.then(()=>scoreWord(name,word)).catch(()=>{});
+}
+
+async function scoreWord(name,word){
+  if(!gameActive||finished)return;
+  let res;
+  try{ res=await ctx('score',{id:challengeId,word}); }catch(e){ scoredCache.delete(word); return; }
+  if(res.error||typeof res.distance!=='number'){ scoredCache.delete(word); return; }
+  const d=res.distance;
+  scoredCache.set(word,{distance:d,by:name});
+  wordsCount++;
+  bumpFeed(word,d);
+  // вставка в доску ближайших
+  insertClosest(word,d,name);
+  if(d<bestDist)bestDist=d;
+  // звук приближения
+  if(soundOn&&d<=200&&d>1)SFX.warm(d);
+  renderAll();
+  if(d===1){ win(name,word); }
+}
+
+function insertClosest(word,d,by){
+  if(closest.find(c=>c.word===word))return;
+  closest.push({word,distance:d,by});
+  closest.sort((a,b)=>a.distance-b.distance);
+  if(closest.length>40)closest.length=40;
+}
+
+/* ════════ HINT ════════ */
+let hintBusy=false;
+function voteHint(name){
+  hintVoters.add(name.toLowerCase());
+  const need=Math.max(1,Math.ceil(uniqUsers.size*0.5));
+  if(hintVoters.size>=need){ hintVoters.clear(); doHint(); }
+  else if(!OBS_MODE){ /* тихо копим */ }
+}
+async function doHint(){
+  if(hintBusy||!gameActive||finished)return;
+  hintBusy=true;
+  try{
+    const rank=Math.max(2,(closest[0]?closest[0].distance:300)-1);
+    const r=await ctx('tip',{id:challengeId,rank:Math.min(rank,300)});
+    if(r&&r.word&&typeof r.distance==='number'){
+      insertClosest(normalize(r.word),r.distance,'💡 подсказка');
+      if(r.distance<bestDist)bestDist=r.distance;
+      renderAll();
+      if(!OBS_MODE)say('💡 Подсказка: «'+r.word+'» (дистанция '+r.distance+')');
+    }
+  }catch(e){}finally{ setTimeout(()=>hintBusy=false,1500); }
+}
+
+/* ════════ WIN ════════ */
+function win(name,word){
+  if(finished&&!gameActive)return;
+  finished=true;gameActive=false;
+  secretWord=word;
+  // лидерборд
+  const key=name.toLowerCase();
+  leaderboard[key]={name,wins:((leaderboard[key]||{}).wins||0)+1};
+  localStorage.setItem('slovo:lb',JSON.stringify(leaderboard));
+  if(soundOn)SFX.win();
+  confettiBurst();
+  if(OBS_MODE){
+    $('ow-w').textContent=word.toUpperCase();
+    $('ow-who').innerHTML='угадал <b>'+esc(name)+'</b>';
+    $('obs-win').classList.add('show');
+    setTimeout(()=>$('obs-win').classList.remove('show'),Math.max(4000,restartSec*1000-500));
+  }else{
+    $('win-word').textContent=word.toUpperCase();
+    $('win-who').innerHTML='угадал <b>'+esc(name)+'</b>!';
+    $('win-sub').textContent=restartSec>0?('новое слово через '+restartSec+'с…'):'жми «Новое слово»';
+    $('win-ov').classList.add('show');
+    say('🎉 @'+name+' угадал слово «'+word.toUpperCase()+'»! Победа! 🏆');
+  }
+  renderAll();
+  if(restartSec>0){
+    restartTimer=setTimeout(()=>{ $('win-ov').classList.remove('show'); $('confetti').classList.remove('show'); newRound(); }, restartSec*1000);
+  }
+}
+
+/* ════════ RENDER ════════ */
+function renderAll(){ OBS_MODE?renderOBS():renderMain(); }
+function renderMain(){
+  $('g-words').textContent=wordsCount;
+  $('feed-cnt').textContent=feed.length;
+  $('st-uniq').textContent=closest.length;
+  $('st-users').textContent=uniqUsers.size;
+  $('st-best').textContent=bestDist===Infinity?'—':bestDist;
+  // board
+  const b=$('board');
+  if(!closest.length){ b.innerHTML='<div class="board-empty">Ждём догадки из чата…</div>'; }
+  else{
+    b.innerHTML=closest.slice(0,boardSize).map((c,i)=>{
+      const p=heatPct(c.distance),col=heatColor(c.distance);
+      return '<div class="guess-row'+(c.distance===1?' win':'')+'"><div class="gr-bar" style="width:'+p+'%;background:'+col+'"></div>'
+        +'<div class="gr-rank">'+(i+1)+'</div>'
+        +'<div class="gr-word">'+esc(c.word)+'</div>'
+        +'<div class="gr-by">'+esc(c.by||'')+'</div>'
+        +'<div class="gr-dist" style="color:'+col+'">'+c.distance+'</div></div>';
+    }).join('');
+  }
+  // feed
+  $('feed').innerHTML=feed.slice(-40).map(f=>{
+    const col=f.d!=null?heatColor(f.d):'var(--dim)';
+    return '<div class="feed-row"><span class="fn" style="color:'+(f.color||'#22d3ee')+'">'+esc(f.name)+'</span> '
+      +'<span class="fw">'+esc(f.word)+'</span> '
+      +(f.d!=null?'<span class="fd" style="color:'+col+'">· '+f.d+'</span>':'<span class="fd">· …</span>')+'</div>';
+  }).join('');
+  $('feed').scrollTop=$('feed').scrollHeight;
+  renderLB();
+}
+function renderLB(){
+  const top=Object.values(leaderboard).sort((a,b)=>b.wins-a.wins).slice(0,12);
+  const el=$('lb'); if(!el)return;
+  el.innerHTML=top.length?top.map((s,i)=>'<div class="lb-row"><div class="lb-rank">'+(i+1)+'</div><div class="lb-name">'+esc(s.name)+'</div><div class="lb-pts">'+s.wins+'</div></div>').join(''):'<div style="color:var(--dim);font-size:.8rem;text-align:center;padding:8px">пока нет победителей</div>';
+}
+function renderOBS(){
+  $('obs-cnt').textContent=wordsCount+' слов';
+  const list=$('obs-list');
+  if(!closest.length){ list.innerHTML='<div style="color:var(--dim);text-align:center;padding:14px;font-size:.85rem">пиши слово в чат…</div>'; }
+  else{
+    list.innerHTML=closest.slice(0,Math.min(boardSize,8)).map((c,i)=>{
+      const p=heatPct(c.distance),col=heatColor(c.distance);
+      return '<div class="obs-row"><div class="obs-bar" style="width:'+p+'%;background:'+col+'"></div>'
+        +'<div class="obs-rank">'+(i+1)+'</div><div class="obs-word">'+esc(c.word)+'</div>'
+        +'<div class="obs-dist" style="color:'+col+'">'+c.distance+'</div></div>';
+    }).join('');
+  }
+  $('obs-foot').innerHTML=bestDist===Infinity?'пиши слово — угадай по смыслу':'лучшая дистанция: <b>'+bestDist+'</b>';
+  obsIdleBump();
+}
+
+/* feed helpers */
+function pushFeed(name,word,d,color){ feed.push({name,word,d,color}); if(feed.length>120)feed.shift(); if(!OBS_MODE)renderMain(); }
+function bumpFeed(word,d){ for(let i=feed.length-1;i>=0;i--){ if(feed[i].word===word&&feed[i].d==null){feed[i].d=d;break;} } }
+
+/* OBS idle fade */
+let obsIdleId=null;
+function obsIdleBump(){ if(!OBS_MODE)return; const r=$('obs-root'); r.style.opacity='1'; clearTimeout(obsIdleId); obsIdleId=setTimeout(()=>{r.style.opacity='0.25';},12000); }
+
+/* ════════ IRC ════════ */
+const BOT_OAUTH='oauth:k1yo3m9jhf89h5fasdu16c5pzkety5';
+const BOT_NICK='ishakgetsbanned';
+function say(msg){ if(ws&&ws.readyState===1&&channel&&!OBS_MODE) ws.send('PRIVMSG #'+channel+' :'+msg); }
+function connectChat(anon){
+  try{ws=new WebSocket('wss://irc-ws.chat.twitch.tv:443')}catch(e){return}
+  ws.onopen=()=>{
+    ws.send('CAP REQ :twitch.tv/tags');
+    if(anon){ ws.send('PASS SCHMOOPIIE'); ws.send('NICK justinfan'+Math.floor(Math.random()*99999)); }
+    else{ ws.send('PASS '+BOT_OAUTH); ws.send('NICK '+BOT_NICK); }
+    ws.send('JOIN #'+channel);
+  };
+  ws.onmessage=ev=>{
+    for(const line of ev.data.trim().split('\r\n')){
+      if(line.startsWith('PING')){ws.send('PONG :tmi.twitch.tv');continue;}
+      if(line.includes('PRIVMSG')){ const m=parseMsg(line); if(m&&m.userLower!=='ishakgetsbanned') handleGuess(m.username,m.text,m.color); }
+    }
+  };
+  ws.onclose=()=>{ setTimeout(()=>{ if(channel)connectChat(anon); },4000); };
+}
+function parseMsg(line){
+  let tags={},rest=line;
+  if(line.startsWith('@')){const sp=line.indexOf(' ');line.substring(1,sp).split(';').forEach(t=>{const p=t.indexOf('=');if(p>0)tags[t.substring(0,p)]=t.substring(p+1)});rest=line.substring(sp+1);}
+  const pi=rest.indexOf('PRIVMSG');if(pi===-1)return null;
+  const ci=rest.indexOf(' :',pi);if(ci===-1)return null;
+  const text=rest.substring(ci+2).trim();if(!text)return null;
+  return{username:tags['display-name']||'Anon',userLower:(tags['display-name']||'anon').toLowerCase(),text,color:tags['color']||'#22d3ee'};
+}
+
+/* ════════ HELPERS ════════ */
+function normalize(s){ return s.toLowerCase().trim().replace(/ё/g,'е').replace(/[^a-zа-я0-9!\- ]/g,'').replace(/\s+/g,' ').split(' ')[0]; }
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+function saveSettings(){ try{localStorage.setItem('slovo:set',JSON.stringify({restartSec,boardSize,soundOn}));}catch(e){} }
+function loadSettings(){ try{const s=JSON.parse(localStorage.getItem('slovo:set')||'{}'); if(s.restartSec!=null)$('s-restart').value=s.restartSec; if(s.boardSize!=null)$('s-board').value=s.boardSize; if(s.soundOn!=null)$('s-sound').checked=s.soundOn;}catch(e){} }
+
+/* ════════ SFX ════════ */
+const SFX=(function(){
+  let ac=null; function ctx2(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();return ac;}
+  function play(f,t,d,v){try{const c=ctx2(),o=c.createOscillator(),g=c.createGain();o.type=t;o.frequency.value=f;g.gain.value=v||.2;g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d);}catch(e){}}
+  return{
+    warm(d){ const f=600+(300-Math.min(300,d))*3; play(f,'sine',.12,.13); },
+    win(){ [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>play(f,'sine',.3,.28),i*110)); },
+  };
+})();
+
+/* ════════ CONFETTI ════════ */
+function confettiBurst(){
+  const cv=$('confetti'); cv.classList.add('show');
+  const ctx=cv.getContext('2d'); cv.width=innerWidth; cv.height=innerHeight;
+  const cols=['#22d3ee','#e879f9','#facc15','#22c55e','#fff'];
+  let P=Array.from({length:160},()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*16,vy:(Math.random()-1)*16-3,r:4+Math.random()*5,c:cols[Math.floor(Math.random()*cols.length)],rot:Math.random()*6,vr:(Math.random()-.5)*.4,life:1}));
+  let t0=null;
+  function frame(t){ if(!t0)t0=t; ctx.clearRect(0,0,cv.width,cv.height); let alive=false;
+    P.forEach(p=>{ p.vy+=.4;p.x+=p.vx;p.y+=p.vy;p.vx*=.99;p.rot+=p.vr;p.life-=.008; if(p.life>0&&p.y<cv.height+20){alive=true; ctx.save();ctx.globalAlpha=Math.max(0,p.life);ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.c;ctx.fillRect(-p.r,-p.r,p.r*2,p.r*1.4);ctx.restore();} });
+    if(alive)requestAnimationFrame(frame); else cv.classList.remove('show');
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ════════ OBS-LINK / CONTROLS ════════ */
+function obsLink(){ return location.origin+location.pathname+'?obs=1&channel='+encodeURIComponent(channel); }
+
+if(!OBS_MODE){
+  // подключаем общий KDRSH-логин/поддержку только в обычном режиме
+  const e=document.createElement('script'); e.src='https://quizkdrsh.vercel.app/embed.js?site=%D0%A1%D0%BB%D0%BE%D0%B2%D0%BE%D1%82%D1%80%D0%BE%D0%BD'; document.body.appendChild(e);
+  loadSettings();
+  $('btn-start').onclick=startGame;
+  $('s-channel').addEventListener('keydown',e=>{if(e.key==='Enter')startGame();});
+  $('sw-eye').onclick=()=>$('secret').classList.toggle('blur');
+  $('btn-new').onclick=()=>newRound();
+  $('btn-hint').onclick=()=>doHint();
+  $('btn-reset').onclick=()=>{ if(confirm('Сбросить игру и вернуться в меню?')){ if(ws)ws.close(); channel=''; location.reload(); } };
+  $('btn-obs').onclick=()=>{
+    const link=obsLink();
+    navigator.clipboard?.writeText(link).then(()=>{},()=>{});
+    prompt('Ссылка-оверлей для OBS (Browser Source, прозрачный фон):',link);
+  };
+  renderLB();
+}else{
+  // OBS overlay mode — self-running
+  document.body.classList.add('obs');
+  channel=(params.get('channel')||'').toLowerCase().replace(/^#/,'');
+  const r=params.get('restart'); if(r!=null)restartSec=parseInt(r)||20;
+  if(channel){ connectChat(true); newRound(); obsIdleBump(); }
+  else{ $('obs-foot').textContent='нет ?channel= в ссылке'; }
+}
+</script>
+<!-- kill-switch -->
+<script>(async()=>{try{const r=await fetch('https://magnetic-stud-80905.upstash.io/get/admin%3Asites',{headers:{Authorization:'Bearer ggAAAAAAATwJAAIgcDGFhji2ubUH7mvvgwz-fXEebOVFx8PCvdGn_61dAUDmPg'}});const d=await r.json();const s=JSON.parse(d.result||'{}');if(s['Словотрон']===false){document.body.innerHTML='<div style="position:fixed;inset:0;background:#0a0e14;color:#fff;display:flex;align-items:center;justify-content:center;font-family:system-ui;flex-direction:column;gap:10px;z-index:99999"><h1 style="font-size:1.4rem">Сайт временно отключён</h1><p style="color:#888">Администратор приостановил работу</p></div>';}}catch(e){}})();</script>
+</body>
+</html>
