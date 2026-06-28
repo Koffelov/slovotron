@@ -109,6 +109,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .win-ov{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;background:rgba(10,14,20,.86);backdrop-filter:blur(6px);padding:20px}
 .win-ov.show{display:flex;animation:fade .3s}
 @keyframes fade{from{opacity:0}to{opacity:1}}
+.win-av{width:108px;height:108px;border-radius:50%;object-fit:cover;border:3px solid var(--cyan);box-shadow:0 0 34px rgba(34,211,238,.45);margin-bottom:14px;display:none}
 .win-label{font-size:1.1rem;letter-spacing:3px;text-transform:uppercase;color:var(--mag);font-weight:800;margin-bottom:8px}
 .win-word{font-size:clamp(3rem,10vw,7rem);font-weight:900;line-height:1;background:linear-gradient(135deg,var(--cyan),var(--mag));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
 .win-who{font-size:1.4rem;font-weight:800}.win-who b{color:var(--cyan)}
@@ -141,6 +142,7 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
 .obs-foot b{color:var(--cyan)}
 .obs-win{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center}
 .obs-win.show{display:flex}
+.obs-win .ow-av{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--cyan);box-shadow:0 0 26px rgba(34,211,238,.5);margin-bottom:10px;display:none}
 .obs-win .ow-l{font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:var(--mag);font-weight:800;text-shadow:0 2px 12px #000}
 .obs-win .ow-w{font-size:clamp(3rem,9vw,6rem);font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--mag));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:0 4px 30px rgba(34,211,238,.4)}
 .obs-win .ow-who{font-size:1.5rem;font-weight:800;color:#fff;text-shadow:0 2px 12px #000}
@@ -218,6 +220,7 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
 
 <!-- WIN overlay (control panel) -->
 <div class="win-ov" id="win-ov">
+  <img id="win-av" class="win-av" alt="">
   <div class="win-label">Слово угадано</div>
   <div class="win-word" id="win-word">—</div>
   <div class="win-who" id="win-who"></div>
@@ -233,6 +236,7 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
     <div class="obs-foot" id="obs-foot">пиши слово в чат — угадай по смыслу</div>
   </div>
   <div class="obs-win" id="obs-win">
+    <img id="ow-av" class="ow-av" alt="">
     <div class="ow-l">Угадано!</div>
     <div class="ow-w" id="ow-w">—</div>
     <div class="ow-who" id="ow-who"></div>
@@ -427,6 +431,17 @@ async function doHint(){
   }catch(e){}finally{ setTimeout(()=>hintBusy=false,1500); }
 }
 
+/* ════════ AVATAR ════════ */
+async function getAvatar(login){
+  try{ const r=await fetch('https://decapi.me/twitch/avatar/'+encodeURIComponent(login)); const t=(await r.text()).trim(); if(t.startsWith('http'))return t; }catch(e){}
+  try{ const r=await fetch('https://api.ivr.fi/v2/twitch/user?login='+encodeURIComponent(login)); const d=await r.json(); if(d&&d[0]&&d[0].logo)return d[0].logo; }catch(e){}
+  return null;
+}
+function showAvatar(imgId,login){
+  const a=$(imgId); if(!a)return; a.style.display='none';
+  getAvatar(login).then(u=>{ if(u){ a.onload=()=>a.style.display=''; a.onerror=()=>a.style.display='none'; a.src=u; } });
+}
+
 /* ════════ WIN ════════ */
 function win(name,word){
   if(finished&&!gameActive)return;
@@ -439,11 +454,13 @@ function win(name,word){
   if(soundOn)SFX.win();
   confettiBurst();
   if(OBS_MODE){
+    showAvatar('ow-av',name.toLowerCase());
     $('ow-w').textContent=word.toUpperCase();
     $('ow-who').innerHTML='угадал <b>'+esc(name)+'</b>';
     $('obs-win').classList.add('show');
     setTimeout(()=>$('obs-win').classList.remove('show'),Math.max(4000,restartSec*1000-500));
   }else{
+    showAvatar('win-av',name.toLowerCase());
     $('win-word').textContent=word.toUpperCase();
     $('win-who').innerHTML='угадал <b>'+esc(name)+'</b>!';
     $('win-sub').textContent=restartSec>0?('новое слово через '+restartSec+'с…'):'жми «Новое слово»';
