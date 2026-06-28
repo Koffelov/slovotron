@@ -191,11 +191,6 @@ body.obs #obs-root{display:block;position:fixed;inset:0;font-family:'Inter',syst
     <div class="g-logo"><svg viewBox="0 0 24 24" fill="#22d3ee"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 3 7h8c1-2 3-4 3-7a7 7 0 0 0-7-7zm-3 18h6v1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-1z"/></svg> СЛОВОТРОН</div>
     <div class="chip">Канал <b id="g-channel">—</b></div>
     <div class="chip">Слов: <b id="g-words">0</b></div>
-    <div class="secret blur panel" id="secret" style="padding:7px 12px;flex-direction:row">
-      <div class="sw-warn">Секрет (только тебе)</div>
-      <div class="sw" id="secret-word">—</div>
-      <button class="sw-eye" id="sw-eye" title="Показать/скрыть"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button>
-    </div>
     <div class="g-spacer"></div>
     <button class="gbtn" id="btn-theme" title="Сменить тему"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99a1.5 1.5 0 0 1 1.5-1.5H16a5 5 0 0 0 5-5c0-4.42-4.03-8-9-8zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>Тема</button>
     <button class="gbtn accent" id="btn-obs"><svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>OBS-ссылка</button>
@@ -361,7 +356,6 @@ async function newRound(){
   try{
     const {id,secret}=await newChallenge();
     challengeId=id;secretWord=secret;
-    $('secret-word').textContent=secret?secret.toUpperCase():'???';
     $('board-status').textContent='идёт игра';
     gameActive=true;finished=false;
     if(!OBS_MODE) say('🧠 Новое слово загадано! Пиши слова в чат — угадай по смыслу. !подсказка — открыть поближе');
@@ -591,7 +585,6 @@ if(!OBS_MODE){
   $('btn-theme').onclick=()=>{ const i=THEMES.findIndex(t=>t.key===curTheme); applyTheme(THEMES[(i+1)%THEMES.length].key); };
   $('btn-start').onclick=startGame;
   $('s-channel').addEventListener('keydown',e=>{if(e.key==='Enter')startGame();});
-  $('sw-eye').onclick=()=>$('secret').classList.toggle('blur');
   $('btn-new').onclick=()=>newRound();
   $('btn-hint').onclick=()=>doHint();
   $('btn-reset').onclick=()=>{ if(confirm('Сбросить игру и вернуться в меню?')){ if(ws)ws.close(); channel=''; location.reload(); } };
